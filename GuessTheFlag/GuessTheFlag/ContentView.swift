@@ -12,6 +12,11 @@ struct ContentView: View {
     @State private var scoreTitle = ""
     @State private var countries = ["Estonia","France","Germany","Ireland","Italy", "Nigeria","Poland","Russia","Spain","UK","US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
+    @State private var score = 0
+    @State private var totalQuestion = 1
+    @State private var buttonText = ""
+    @State private var alertMessage = ""
+    
     var body: some View {
         
         ZStack{
@@ -24,7 +29,7 @@ struct ContentView: View {
                     .font(.largeTitle.bold())
                     .foregroundColor(.white)
                 
-                Spacer() 
+                Spacer()
                 VStack(spacing:30){
                     VStack {
                         Text("Choose the rigt flag of ")
@@ -52,7 +57,7 @@ struct ContentView: View {
                 Spacer()
                 Spacer()
                 
-                Text("Score ???")
+                Text("Score \(score)")
                     .font(.title2.bold())
                     .foregroundColor(.white)
                 
@@ -60,22 +65,43 @@ struct ContentView: View {
             .padding()
             
         }.alert(scoreTitle, isPresented: $showScore){
-            Button("Continue" , action: askQuestion)
+            Button(buttonText , action: askQuestion)
         }message: {
-            Text("Your score is ???")
+            Text(alertMessage)
         }
     }
     
     func flagTapped(_ number: Int) {
         if(number == correctAnswer){
             scoreTitle = "Correct"
+            score+=1
         }else {
             scoreTitle = "Wrong"
+            score-=1
         }
         showScore = true
+        totalQuestion += 1
+        checkGameStatus(number)
+    }
+    
+    func checkGameStatus(_ number : Int){
+        if(totalQuestion < 9 ) {
+            buttonText = "Continue"
+            alertMessage = "The flag is \(countries[number])"
+        }else {
+            buttonText = "Restart"
+            alertMessage = """
+                            The flag is \(countries[number])
+                            Your score is \(score)
+                            """
+        }
     }
     
     func askQuestion(){
+        if(totalQuestion >= 9){
+            totalQuestion = 1
+            score = 0
+        }
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
     }

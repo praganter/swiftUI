@@ -16,31 +16,45 @@ struct ContentView: View {
     @State private var errorMessage = ""
     @State private var showingError = false
     
+    @State private var score = 0
+    
     var body: some View {
         NavigationView{
-            List {
-                Section {
-                    TextField("Enter your word", text: $newWord)
-                        .onSubmit(addNewWord)
-                        .autocapitalization(.none)
-                        .autocorrectionDisabled(true)
-                }
-                
-                Section {
-                    ForEach(usedWords, id: \.self){word in
-                        HStack{
-                            Image(systemName: "\(word.count).circle")
-                            Text(word)
+           
+                List {
+                    Section {
+                        TextField("Enter your word", text: $newWord)
+                            .onSubmit(addNewWord)
+                            .autocapitalization(.none)
+                            .autocorrectionDisabled(true)
+                    }
+                    
+                    Section {
+                        ForEach(usedWords, id: \.self){word in
+                            HStack{
+                                Image(systemName: "\(word.count).circle")
+                                Text(word)
+                            }
                         }
                     }
+                    
+                   Section {
+                        Text("Score : \(score)")
+                    }
                 }
-            }
+                
+            
             .navigationTitle(rootWord)
             .onAppear(perform:startGame)
             .alert(errorTitle, isPresented: $showingError) {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(errorMessage)
+            }
+            .toolbar {
+                ToolbarItem(placement: .bottomBar) {
+                    Button("Start Game", action: startGame)
+                }
             }
         }
     }
@@ -62,9 +76,15 @@ struct ContentView: View {
             wordError(title: "Word not recognized", message: "You can't just make them up, you know!")
             return
         }
+        
+        guard isAcceptable(word: answer) else {
+            wordError(title: "Word is illegal :)", message: "Word can not be shorten than three characters and can not be the same as rootword.")
+            return
+        }
         withAnimation
         {
             usedWords.insert(answer, at: 0)
+            calculateScore()
         }
         newWord = ""
     }
@@ -106,10 +126,28 @@ struct ContentView: View {
         return misspelledRange.location == NSNotFound
     }
     
+    func isAcceptable(word: String) -> Bool {
+        if(word.count < 3) {
+            return false
+        }
+        if(word == rootWord) {
+            return false
+        }
+        return true
+    }
+    
     func wordError(title: String, message: String) {
         errorTitle = title
         errorMessage = message
         showingError = true
+    }
+    
+    private func calculateScore(){
+        var temp = 0
+        for  word in usedWords {
+            temp += word.count
+        }
+        score = temp
     }
 }
 
